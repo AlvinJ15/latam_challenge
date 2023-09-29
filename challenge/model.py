@@ -5,6 +5,8 @@ import xgboost as xgb
 from typing import Tuple, Union, List
 from datetime import datetime
 
+from sklearn.model_selection import train_test_split
+
 
 class DelayModel:
 
@@ -12,7 +14,6 @@ class DelayModel:
             self
     ):
         self._columns = None
-        self._model = None
         self._threshold_in_minutes = 15
         self._columns_chosen = ['OPERA', 'TIPOVUELO', 'MES']
         self._top_10_features = [
@@ -27,6 +28,22 @@ class DelayModel:
             "OPERA_Sky Airline",
             "OPERA_Copa Air"
         ]
+        self.data = pd.read_csv(filepath_or_buffer="data/data.csv")
+        self._model = None
+        self._initialize_model()
+
+    def _initialize_model(self) -> None:
+        features, target = self.preprocess(
+            data=self.data,
+            target_column="delay"
+        )
+        _, features_validation, _, target_validation = train_test_split(features, target, test_size=0.33,
+                                                                        random_state=42)
+
+        self.fit(
+            features=features,
+            target=target
+        )
 
     def _get_min_diff(self, data):
         fecha_o = datetime.strptime(data['Fecha-O'], '%Y-%m-%d %H:%M:%S')
@@ -106,4 +123,6 @@ class DelayModel:
         Returns:
             (List[int]): predicted targets.
         """
-        return self._model.predict(features)
+        predictions = self._model.predict(features)
+        predictions = predictions.tolist() if isinstance(predictions, np.ndarray) else predictions
+        return predictions

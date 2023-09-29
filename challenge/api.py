@@ -1,8 +1,7 @@
 import fastapi
-import numpy as np
 import pandas as pd
-from fastapi import HTTPException
 
+from fastapi import HTTPException
 from pydantic import BaseModel, validator
 
 from challenge.model import DelayModel
@@ -51,8 +50,8 @@ async def post_predict(request_body: PredictionRequest) -> dict:
         })
 
     df = pd.DataFrame(data)
-    predictions = model.predict(model.preprocess(df))
-    predictions = predictions.tolist() if isinstance(predictions, np.ndarray) else predictions
+    df_preprocess = model.preprocess(df)
+    predictions = model.predict(df_preprocess)
 
     # Devolver las predicciones en la respuesta
     return {"predict": predictions}
